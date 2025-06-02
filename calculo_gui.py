@@ -25,6 +25,15 @@ def calcular_valores():
         listbox_resultados.delete("1.0", "end")
         total_pago = 0
 
+        # Show fixed and variable values in the results window
+        listbox_resultados.insert(
+            "end", f"Valor fixo por apartamento: R$ {valor_fixo_por_apartamento:.2f}\n"
+        )
+        listbox_resultados.insert(
+            "end",
+            f"Valor variável por residente: R$ {valor_variavel_por_residente:.2f}\n\n",
+        )
+
         # Calculate and display costs per apartment
         for apt, res in distribuicao_residentes.items():
             valor_total_apartamento = valor_fixo_por_apartamento + (
