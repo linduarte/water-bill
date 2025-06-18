@@ -1,68 +1,82 @@
+# water-bill
+
 import ttkbootstrap as tb
+from tkinter import messagebox
 
 
 def calcular_valores():
     try:
-        # Retrieve and convert input values
+        # Recupera e converte os valores de entrada
         valor_fixo = float(entry_fixo.get())
         valor_variavel = float(entry_variavel.get())
         recursos_hidr_agua = float(entry_recursos_agua.get())
         recursos_hidr_esg = float(entry_recursos_esg.get())
 
-        # Calculate total water bill
+        # Total da conta de água
         total_conta_agua = (
             valor_fixo + valor_variavel + recursos_hidr_agua + recursos_hidr_esg
         )
 
-        # Calculate fixed and variable costs per apartment/resident
-        valor_fixo_por_apartamento = valor_fixo / 8  # Fixed number of apartments
+        numero_apartamentos = 8
+        valor_fixo_por_apartamento = valor_fixo / numero_apartamentos
         numero_residentes = sum(distribuicao_residentes.values())
         valor_variavel_por_residente = (
             valor_variavel / numero_residentes if numero_residentes > 0 else 0
         )
 
-        # Clear previous results
-        listbox_resultados.delete("1.0", "end")
+        # Cálculo do total inicialmente arrecadado
         total_pago = 0
+        for res in distribuicao_residentes.values():
+            total_pago += valor_fixo_por_apartamento + (
+                valor_variavel_por_residente * res
+            )
 
-        # Show fixed and variable values in the results window
+        # Ajuste da diferença
+        diferenca = total_conta_agua - total_pago
+        ajuste_por_apartamento = diferenca / numero_apartamentos
+        valor_fixo_corrigido_por_apartamento = (
+            valor_fixo_por_apartamento + ajuste_por_apartamento
+        )
+
+        # Limpa resultados anteriores
+        listbox_resultados.delete("1.0", "end")
+
+        # Exibe valores fixos e variáveis
         listbox_resultados.insert(
-            "end", f"Valor fixo por apartamento: R$ {valor_fixo_por_apartamento:.2f}\n"
+            "end",
+            f"Valor fixo (ajustado) por apartamento: R$ {valor_fixo_corrigido_por_apartamento:.2f}\n",
         )
         listbox_resultados.insert(
             "end",
             f"Valor variável por residente: R$ {valor_variavel_por_residente:.2f}\n\n",
         )
 
-        # Calculate and display costs per apartment
+        # Calcula e exibe valores por apartamento
+        total_pago_corrigido = 0
         for apt, res in distribuicao_residentes.items():
-            valor_total_apartamento = valor_fixo_por_apartamento + (
+            valor_total_apartamento = valor_fixo_corrigido_por_apartamento + (
                 valor_variavel_por_residente * res
             )
-            total_pago += valor_total_apartamento
+            total_pago_corrigido += valor_total_apartamento
             listbox_resultados.insert(
                 "end", f"{apt}: R$ {valor_total_apartamento:.2f}\n"
             )
 
-        # Display total collected, total bill, and difference
-        listbox_resultados.insert("end", f"\nTotal arrecadado: R$ {total_pago:.2f}\n")
+        # Exibe totais e diferença
+        listbox_resultados.insert(
+            "end", f"\nTotal arrecadado: R$ {total_pago_corrigido:.2f}\n"
+        )
         listbox_resultados.insert(
             "end", f"Valor total da conta: R$ {total_conta_agua:.2f}\n"
         )
         listbox_resultados.insert(
-            "end", f"Diferença: R$ {(total_conta_agua - total_pago):.2f}\n"
+            "end", f"Diferença: R$ {(total_conta_agua - total_pago_corrigido):.2f}\n"
         )
 
     except ValueError:
-        # Handle invalid numeric input
-        tb.dialogs.Messagebox.show_error(
-            "Erro", "Por favor, insira valores numéricos válidos."
-        )
+        messagebox.showerror("Erro", "Por favor, insira valores numéricos válidos.")
     except Exception as e:
-        # Handle unexpected errors
-        tb.dialogs.Messagebox.show_error(
-            "Erro", f"Ocorreu um erro inesperado: {str(e)}"
-        )
+        messagebox.showerror("Erro", f"Ocorreu um erro inesperado: {str(e)}")
 
 
 def atualizar_residentes():
@@ -70,15 +84,14 @@ def atualizar_residentes():
     res = entry_residentes.get()
     if apt and res.isdigit():
         distribuicao_residentes[apt] = int(res)
-        tb.dialogs.Messagebox.show_info(
+        messagebox.showinfo(
             "Atualizado", f"Apartamento {apt} agora tem {res} moradores."
         )
     else:
-        tb.dialogs.Messagebox.show_error(
-            "Erro", "Digite um número válido de moradores."
-        )
+        messagebox.showerror("Erro", "Digite um número válido de moradores.")
 
 
+# Distribuição padrão
 distribuicao_residentes = {
     "Apto 01": 3,
     "Apto 02": 3,
@@ -90,6 +103,7 @@ distribuicao_residentes = {
     "Apto 302": 2,
 }
 
+# Interface gráfica
 root = tb.Window(themename="cyborg")
 root.title("Cálculo de Conta de Água")
 root.geometry("750x500")
@@ -136,11 +150,9 @@ tb.Button(
     frame_update, text="Atualizar", bootstyle="info", command=atualizar_residentes
 ).grid(row=0, column=4, padx=5)
 
-# Create a frame for the exit button
 frame_bottom = tb.Frame(root)
 frame_bottom.pack(pady=10)
 
-# Add exit button
 tb.Button(frame_bottom, text="Sair", bootstyle="danger", command=root.destroy).pack(
     side="right", padx=5
 )
