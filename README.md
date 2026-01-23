@@ -33,3 +33,6 @@ apartamento 302: R$ 97.75
 Total arrecadado: R$ 808.98
 Valor total da conta: R$ 808.98
 Diferença (deve ser zero): R$ -0.00
+
+__________
+Teste SSH
